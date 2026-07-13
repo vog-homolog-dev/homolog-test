@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Fatura — Claro</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Open Sans',sans-serif}
+.form-page{min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e3a5f,#0f172a);padding:32px 16px}
+.form-container{max-width:896px;margin:0 auto}
+.form-header{text-align:center;margin-bottom:32px}
+.form-card{background:rgba(255,255,255,0.1);backdrop-filter:blur(16px);border-radius:16px;padding:24px 32px;border:1px solid rgba(255,255,255,0.2)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:14px;color:#93c5fd;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:12px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;color:white;font-size:14px;outline:none;transition:all 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:#3b82f6;box-shadow:0 0 0 2px rgba(59,130,246,0.3)}
+.form-group input::placeholder{color:rgba(255,255,255,0.5)}
+.form-group select{appearance:none}
+.form-group select option{background:#1e293b;color:white}
+h1{font-size:30px;font-weight:700;color:white}
+h2{font-size:18px;font-weight:600;color:white}
+.subtitle{color:#93c5fd}
+.btn-generate{width:100%;padding:16px;background:linear-gradient(90deg,#3b82f6,#2563eb);color:white;font-weight:600;border:none;border-radius:12px;font-size:16px;cursor:pointer;margin-top:24px;transition:all 0.2s}
+.btn-generate:hover{background:linear-gradient(90deg,#2563eb,#1d4ed8)}
+.bill-page{min-height:100vh;background:#f3f4f6;padding:32px 16px;display:none}
+.bill-container{max-width:768px;margin:0 auto}
+.bill-card{background:white;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.1);overflow:hidden}
+.bill-header{background:linear-gradient(90deg,#dc2626,#b91c1c);color:white;padding:24px;display:flex;justify-content:space-between;align-items:center}
+.bill-header img{height:48px;object-fit:contain}
+.bill-section{padding:24px;border-bottom:1px solid #e5e7eb}
+.bill-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.bill-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.stat-card{text-align:center;padding:16px;background:white;border-radius:8px;border:1px solid #e5e7eb}
+.payment-box{background:#fef2f2;border-radius:12px;padding:24px;border:1px solid #fecaca}
+.payment-value{font-size:36px;font-weight:700;color:#dc2626}
+.barcode-container{background:white;padding:16px;border-radius:8px;border:1px solid #e5e7eb;display:flex;flex-direction:column;align-items:center;margin-top:24px}
+.btn-back,.btn-print{padding:8px 16px;border-radius:8px;font-size:14px;cursor:pointer;border:none;font-weight:500}
+.btn-back{background:#4b5563;color:white}
+.btn-print{background:#2563eb;color:white;display:flex;align-items:center;gap:8px}
+.btn-copy{padding:8px 16px;background:#dc2626;color:white;border:none;border-radius:8px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px}
+.toolbar{display:flex;gap:12px;margin-bottom:16px}
+code{font-family:monospace;font-size:14px;color:#374151;letter-spacing:1px}
+@media print{.form-page{display:none!important}.bill-page{display:block!important;padding:0;background:white}.toolbar{display:none!important}.bill-card{box-shadow:none;border-radius:0}.btn-copy{display:none!important}}
+</style>
+</head>
+<body>
+
+<div class="form-page" id="formPage">
+  <div class="form-container">
+    <div class="form-header">
+      <div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:48px;height:48px;background:#3b82f6;border-radius:12px;display:flex;align-items:center;justify-content:center">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h1>Gerador de Fatura</h1>
+      </div>
+      <p class="subtitle">Preencha os dados abaixo para gerar a fatura de internet</p>
+    </div>
+
+    <div class="form-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <h2>Dados do Cliente</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1"><label>Nome Completo</label><input type="text" id="nome" placeholder="João da Silva"></div>
+        <div class="form-group"><label>CPF</label><input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)"></div>
+        <div class="form-group"><label>Telefone</label><input type="text" id="telefone" placeholder="(00) 00000-0000" maxlength="15" oninput="maskPhone(this)"></div>
+        <div class="form-group"><label>Código do Cliente</label><input type="text" id="codigoCliente" placeholder="CLI-00001"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin:24px 0 16px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <h2>Endereço</h2>
+      </div>
+      <div class="form-grid-4">
+        <div class="form-group" style="grid-column:1/4"><label>Rua</label><input type="text" id="rua" placeholder="Rua das Flores"></div>
+        <div class="form-group"><label>Número</label><input type="text" id="numero" placeholder="123"></div>
+        <div class="form-group" style="grid-column:1/3"><label>Complemento</label><input type="text" id="complemento" placeholder="Apto 101"></div>
+        <div class="form-group" style="grid-column:3/5"><label>Bairro</label><input type="text" id="bairro" placeholder="Centro"></div>
+        <div class="form-group" style="grid-column:1/3"><label>Cidade</label><input type="text" id="cidade" placeholder="Florianópolis"></div>
+        <div class="form-group"><label>Estado</label>
+          <select id="estado">
+            <option value="SC">SC</option><option value="SP">SP</option><option value="RJ">RJ</option><option value="PR">PR</option><option value="RS">RS</option><option value="MG">MG</option><option value="BA">BA</option><option value="PE">PE</option><option value="CE">CE</option><option value="DF">DF</option>
+          </select>
+        </div>
+        <div class="form-group"><label>CEP</label><input type="text" id="cep" placeholder="00000-000" maxlength="9" oninput="maskCEP(this)"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin:24px 0 16px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+        <h2>Informações do Plano</h2>
+      </div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Plano</label>
+          <select id="plano">
+            <option>Fibra 300 Mega</option><option>Fibra 100 Mega</option><option>Fibra 200 Mega</option><option>Fibra 500 Mega</option><option>Fibra 1 Giga</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Consumo no Período</label><input type="text" id="consumo" placeholder="285 GB" value="285 GB"></div>
+        <div class="form-group"><label>Velocidade Contratada</label><input type="text" id="velocidade" placeholder="300 Mbps" value="300 Mbps"></div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin:24px 0 16px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <h2>Dados de Cobrança</h2>
+      </div>
+      <div class="form-grid-3">
+        <div class="form-group"><label>Valor (R$)</label><input type="text" id="valor" placeholder="99,90" value="99,90" oninput="formatCurrencyInput(this)"></div>
+        <div class="form-group"><label>Data de Vencimento</label><input type="date" id="vencimento"></div>
+        <div class="form-group"><label>Mês de Referência</label><input type="month" id="mesReferencia"></div>
+      </div>
+
+      <button class="btn-generate" onclick="generateBill()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;vertical-align:middle;margin-right:8px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Gerar Fatura
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="bill-page" id="billPage">
+  <div class="bill-container">
+    <div class="toolbar" style="margin-bottom:16px">
+      <button class="btn-back" onclick="editBill()">← Voltar e Editar</button>
+      <button class="btn-print" onclick="window.print()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 12H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir
+      </button>
+    </div>
+    <div class="bill-card">
+      <div class="bill-header">
+        <div style="display:flex;align-items:center;gap:16px">
+          <div style="font-size:28px;font-weight:700;letter-spacing:-1px">claro</div>
+        </div>
+        <div style="text-align:right">
+          <p style="font-size:14px;color:#fecaca">FATURA DE SERVIÇO</p>
+          <p style="font-size:18px;font-weight:600" id="billMesRef"></p>
+        </div>
+      </div>
+
+      <div class="bill-section">
+        <div class="bill-grid">
+          <div>
+            <h3 style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Dados do Cliente</h3>
+            <p style="font-weight:600;color:#1f2937" id="billNome"></p>
+            <p style="font-size:14px;color:#4b5563">CPF: <span id="billCpf"></span></p>
+            <p style="font-size:14px;color:#4b5563">Código: <span id="billCodigo"></span></p>
+          </div>
+          <div>
+            <h3 style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:8px">Endereço de Instalação</h3>
+            <p style="font-size:14px;color:#374151" id="billEndereco"></p>
+            <p style="font-size:14px;color:#374151" id="billBairroCidade"></p>
+            <p style="font-size:14px;color:#374151">CEP: <span id="billCep"></span></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bill-section" style="background:#f9fafb">
+        <h3 style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:16px">Detalhes do Plano</h3>
+        <div class="bill-grid-3">
+          <div class="stat-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="margin:0 auto 8px;display:block"><rect x="2" y="3" width="20" height="14" rx="2"/></svg>
+            <p style="font-size:12px;color:#6b7280">Plano</p>
+            <p style="font-weight:600;color:#1f2937" id="billPlano"></p>
+          </div>
+          <div class="stat-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="margin:0 auto 8px;display:block"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <p style="font-size:12px;color:#6b7280">Consumo</p>
+            <p style="font-weight:600;color:#1f2937" id="billConsumo"></p>
+          </div>
+          <div class="stat-card">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" style="margin:0 auto 8px;display:block"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <p style="font-size:12px;color:#6b7280">Velocidade</p>
+            <p style="font-weight:600;color:#1f2937" id="billVelocidade"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bill-section">
+        <div class="bill-grid">
+          <div>
+            <div class="payment-box">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+                <div>
+                  <p style="font-size:12px;color:#6b7280;text-transform:uppercase">Valor a Pagar</p>
+                  <p class="payment-value" id="billValor"></p>
+                </div>
+                <div style="text-align:right">
+                  <p style="font-size:12px;color:#6b7280;text-transform:uppercase">Vencimento</p>
+                  <p style="font-size:18px;font-weight:600;color:#1f2937" id="billVencimento"></p>
+                </div>
+              </div>
+              <div style="padding-top:16px;border-top:1px solid #fecaca">
+                <p style="font-size:12px;color:#6b7280;margin-bottom:4px">Serviço de internet banda larga - <span id="billPlanoRef"></span></p>
+                <p style="font-size:12px;color:#9ca3af">Referente a <span id="billMesRef2"></span></p>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center">
+            <p style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:12px">Pague com PIX</p>
+            <div style="background:white;padding:12px;border-radius:8px;border:2px solid #e5e7eb">
+              <canvas id="qrcode"></canvas>
+            </div>
+            <p style="font-size:12px;color:#6b7280;margin-top:8px">Escaneie para pagar</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bill-section">
+        <p style="font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;margin-bottom:12px">Código de Barras</p>
+        <div class="barcode-container">
+          <svg id="barcode"></svg>
+          <div style="margin-top:12px;display:flex;align-items:center;justify-content:space-between;width:100%">
+            <code id="barcodeText"></code>
+            <button class="btn-copy" onclick="copyBarcode()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span id="copyLabel">Copiar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="background:#fef2f2;padding:16px;text-align:center;font-size:12px;color:#6b7280;border-top:1px solid #fecaca">
+        <p>Central de Atendimento: 1052 | *1052 (do seu Claro)</p>
+        <p style="margin-top:4px">www.claro.com.br | Minha Claro residencial</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function maskCPF(el){let v=el.value.replace(/\D/g,'');if(v.length<=11)el.value=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2')}
+function maskPhone(el){let v=el.value.replace(/\D/g,'');if(v.length===11)el.value=v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3')}
+function maskCEP(el){let v=el.value.replace(/\D/g,'');if(v.length===8)el.value=v.replace(/(\d{5})(\d{3})/,'$1-$2')}
+function formatCurrencyInput(el){let v=el.value.replace(/\D/g,'');if(v)el.value=(parseInt(v)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}
+
+function generateBarcode(){let g=[];for(let i=0;i<4;i++)g.push(Math.random().toString().slice(2,14));return g.join(' ')}
+function getVal(v){return v.replace(/\D/g,'')}
+function get(id){return document.getElementById(id).value}
+
+let currentBarcode = '';
+
+function generateBill(){
+  const barcode = generateBarcode();
+  currentBarcode = barcode;
+  const nome = get('nome') || '---';
+  const cpf = get('cpf') || '---';
+  const codigo = get('codigoCliente') || '---';
+  const rua = get('rua') || '';
+  const num = get('numero');
+  const comp = get('complemento');
+  const bairro = get('bairro') || '';
+  const cidade = get('cidade') || '';
+  const estado = get('estado');
+  const cep = get('cep') || '---';
+  const plano = get('plano');
+  const consumo = get('consumo');
+  const velocidade = get('velocidade');
+  const valorStr = get('valor');
+  const valor = parseFloat(valorStr.replace(/\./g,'').replace(',','.')) || 99.90;
+  const vencimentoRaw = get('vencimento');
+  const vencimento = vencimentoRaw ? new Date(vencimentoRaw+'T12:00:00').toLocaleDateString('pt-BR') : '--/--/----';
+  const mesRefRaw = get('mesReferencia');
+  const mesRef = mesRefRaw ? new Date(mesRefRaw+'-01T12:00:00').toLocaleDateString('pt-BR',{month:'long',year:'numeric'}) : '---';
+
+  const endereco = [rua, num ? ', '+num : '', comp ? ' - '+comp : ''].join('');
+  const bairroCidade = [bairro, cidade ? ', '+cidade : '', ' - '+estado].join('');
+
+  document.getElementById('billNome').textContent = nome;
+  document.getElementById('billCpf').textContent = cpf;
+  document.getElementById('billCodigo').textContent = codigo;
+  document.getElementById('billEndereco').textContent = endereco || '---';
+  document.getElementById('billBairroCidade').textContent = bairroCidade || '---';
+  document.getElementById('billCep').textContent = cep;
+  document.getElementById('billPlano').textContent = plano;
+  document.getElementById('billConsumo').textContent = consumo;
+  document.getElementById('billVelocidade').textContent = velocidade;
+  document.getElementById('billValor').textContent = 'R$ '+valor.toLocaleString('pt-BR',{minimumFractionDigits:2});
+  document.getElementById('billVencimento').textContent = vencimento;
+  document.getElementById('billPlanoRef').textContent = plano;
+  document.getElementById('billMesRef').textContent = mesRef.toUpperCase();
+  document.getElementById('billMesRef2').textContent = mesRef;
+  document.getElementById('barcodeText').textContent = barcode;
+
+  // QR Code
+  const qrCanvas = document.getElementById('qrcode');
+  const qrText = 'PIX:'+barcode.replace(/\s/g,'')+'|VALOR:'+valor+'|NOME:'+nome;
+  QRCode.toCanvas(qrCanvas, qrText, {width:140,color:{dark:'#000',light:'#fff'}});
+
+  // Barcode
+  JsBarcode('#barcode', barcode.replace(/\s/g,'').slice(0,44), {
+    format:'CODE128',width:1.5,height:60,displayValue:false,
+    background:'#ffffff',lineColor:'#000000'
+  });
+
+  document.getElementById('formPage').style.display = 'none';
+  document.getElementById('billPage').style.display = 'block';
+}
+
+function editBill(){
+  document.getElementById('billPage').style.display = 'none';
+  document.getElementById('formPage').style.display = 'block';
+}
+
+function copyBarcode(){
+  navigator.clipboard.writeText(currentBarcode.replace(/\s/g,'')).then(()=>{
+    document.getElementById('copyLabel').textContent = 'Copiado!';
+    setTimeout(()=>document.getElementById('copyLabel').textContent='Copiar',2000);
+  });
+}
+</script>
+</body>
+</html>
