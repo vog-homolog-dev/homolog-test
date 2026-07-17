@@ -34,4 +34,3 @@ if(sp)sp.style.display='none';if(ti){ti.textContent='Recebemos seu pagamento!';t
 if(su)su.textContent='Você receberá a confirmação por e-mail em instantes.'},2500);
 },true);
 })();
-.render(u.jsx(O.StrictMode,{children:u.jsx(m2,{})}));
