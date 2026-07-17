@@ -4,12 +4,10 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const multer = require('multer');
 const crypto = require('crypto');
 const path = require('path');
 
 const app = express();
-const upload = multer({ dest: 'uploads/' });
 
 // ─── CONFIG ──────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -112,31 +110,6 @@ app.post('/api/create-payment', async (req, res) => {
   });
 });
 
-// POST /api/upload-receipt — upload de comprovante
-app.post('/api/upload-receipt', upload.single('receipt'), async (req, res) => {
-  const { cpf } = req.body;
-  if (!cpf) return res.status(400).json({ error: 'CPF obrigatório' });
-
-  const { data: existing } = await supabase
-    .from('receipts')
-    .select('id')
-    .eq('cpf', cpf)
-    .single();
-
-  if (existing) {
-    return res.status(400).json({ error: 'CPF já possui comprovante' });
-  }
-
-  const { error } = await supabase.from('receipts').insert({
-    cpf,
-    file_name: req.file?.originalname || 'comprovante.png',
-    file_url: req.file?.path || ''
-  });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json({ success: true, message: 'Comprovante enviado' });
-});
-
 // GET /api/site-settings/logo — retorna logo pública
 app.get('/api/site-settings/logo', async (req, res) => {
   const { data: logo } = await supabase.from('settings').select('value').eq('key', 'logo_url').single();
@@ -200,18 +173,6 @@ app.post('/api/admin/settings', authMiddleware, async (req, res) => {
   res.json({ success: true });
 });
 
-// GET /api/admin/receipts — listar comprovantes
-app.get('/api/admin/receipts', authMiddleware, async (req, res) => {
-  const { data } = await supabase.from('receipts').select('*').order('uploaded_at', { ascending: false });
-  res.json(data || []);
-});
-
-// GET /api/admin/cpf-keys — listar chaves CPF
-app.get('/api/admin/cpf-keys', authMiddleware, async (req, res) => {
-  const { data } = await supabase.from('cpf_api_keys').select('*');
-  res.json({ keys: data || [] });
-});
-
 // POST /api/admin/cpf-keys — adicionar chave CPF
 app.post('/api/admin/cpf-keys', authMiddleware, async (req, res) => {
   const { secondary_password, key_name, api_key } = req.body;
@@ -246,8 +207,6 @@ app.listen(PORT, () => {
   console.log('  POST /api/save-pix-session');
   console.log('  GET  /api/pix-session/:token');
   console.log('  POST /api/create-payment');
-  console.log('  POST /api/upload-receipt');
   console.log('  POST /api/admin/login');
   console.log('  GET  /api/admin/settings (auth)');
-  console.log('  GET  /api/admin/receipts  (auth)');
 });
