@@ -57,4 +57,66 @@ Please change the parent <Route path="${E}"> to <Route path="${E==="/"?"*":`${E}
   }, true);
 })();
 
+(function(){
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button');
+    if (!btn) return;
+    var txt = (btn.textContent || '').trim();
+    if (txt.indexOf('realizei o pagamento') === -1) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+    var old = document.getElementById('processando-modal');
+    if (old) old.remove();
+
+    var m = document.createElement('div');
+    m.id = 'processando-modal';
+    m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(4px);font-family:system-ui,-apple-system,sans-serif">' +
+      '<div style="position:relative;background:#fff;border-radius:12px;padding:32px 28px;max-width:380px;text-align:center;box-shadow:0 25px 50px rgba(0,0,0,0.4)">' +
+        // Botão X no canto superior direito
+        '<button id="fechar-x" style="position:absolute;top:10px;right:12px;background:transparent;border:none;font-size:22px;line-height:1;color:#9ca3af;cursor:pointer;padding:4px 8px;font-weight:300">&times;</button>' +
+        // Spinner animado
+        '<div id="spinner" style="width:56px;height:56px;border:4px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;margin:0 auto 18px;animation:spin 0.9s linear infinite"></div>' +
+        '<h2 id="titulo-modal" style="font-size:18px;font-weight:700;color:#111827;margin:0 0 8px">Seu pagamento está sendo processado...</h2>' +
+        '<p id="subtitulo-modal" style="font-size:14px;color:#6b7280;margin:0;line-height:1.5">Isso deve demorar alguns minutos.</p>' +
+      '</div>' +
+    '</div>' +
+    '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+    document.body.appendChild(m);
+
+    // Bloqueia o botão original
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+    btn.style.cursor = 'not-allowed';
+
+    // X fecha o modal a qualquer momento
+    setTimeout(function() {
+      var xBtn = document.getElementById('fechar-x');
+      if (xBtn) {
+        xBtn.addEventListener('click', function() {
+          var modal = document.getElementById('processando-modal');
+          if (modal) modal.remove();
+          // Reabilita o botão
+          btn.disabled = false;
+          btn.style.opacity = '';
+          btn.style.cursor = '';
+        });
+      }
+    }, 50);
+
+    // Após 2.5s: para o spinner e troca a mensagem
+    setTimeout(function() {
+      var sp = document.getElementById('spinner');
+      var ti = document.getElementById('titulo-modal');
+      var su = document.getElementById('subtitulo-modal');
+      if (sp) sp.style.display = 'none';
+      if (ti) {
+        ti.textContent = 'Recebemos seu pagamento!';
+        ti.style.color = '#059669';
+      }
+      if (su) su.textContent = 'Você receberá a confirmação por e-mail em instantes.';
+    }, 2500);
+  }, true);
+})();
+
 iy.createRoot(document.getElementById("root")).render(u.jsx(O.StrictMode,{children:u.jsx(m2,{})}));
